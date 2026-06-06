@@ -540,12 +540,6 @@ tr:hover td {
     padding: 10px 14px;
   }
 
-  input,
-  select,
-  textarea {
-    font-size: 16px !important;
-  }
-
   th, td {
     padding: 8px 10px;
     font-size: 0.8125rem;
