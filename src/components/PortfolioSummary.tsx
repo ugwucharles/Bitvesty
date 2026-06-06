@@ -66,10 +66,30 @@ export default function PortfolioSummary() {
   const handleWithdrawBankSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseFloat(modalAmount);
-    // Deduct balance
-    withdrawFunds(amt);
-    // Log pending withdrawal in ledger
-    addWithdrawTransaction(amt, { ...bankInfo });
+    if (isNaN(amt) || amt <= 0) {
+      showToast('Please enter a valid withdrawal amount.', 'error');
+      return;
+    }
+    const normalizedBankInfo = {
+      accountName: bankInfo.accountName.trim(),
+      routingNumber: bankInfo.routingNumber.trim(),
+      accountNumber: bankInfo.accountNumber.trim(),
+      bankName: bankInfo.bankName.trim(),
+    };
+    if (!normalizedBankInfo.accountName || !normalizedBankInfo.routingNumber || !normalizedBankInfo.accountNumber || !normalizedBankInfo.bankName) {
+      showToast('Please complete all bank account fields.', 'error');
+      return;
+    }
+
+    const withdrawalResult = withdrawFunds(amt);
+    if (!withdrawalResult.success) {
+      showToast(withdrawalResult.error || 'Unable to process this withdrawal right now.', 'error');
+      return;
+    }
+
+    // Log pending withdrawal in ledger after successful balance deduction
+    addWithdrawTransaction(amt, normalizedBankInfo);
+    showToast(`Withdrawal request for $${amt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} submitted.`, 'success');
     // Move to done step
     setWithdrawStep('done');
   };

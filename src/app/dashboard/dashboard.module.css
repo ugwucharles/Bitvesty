@@ -4,6 +4,24 @@
   min-height: 100vh;
   min-height: 100dvh;
   background-color: var(--bg-base);
+  --dashboard-scale: 0.94;
+}
+
+@media (min-width: 1025px) {
+  .dashboardContainer {
+    zoom: var(--dashboard-scale);
+  }
+}
+
+@supports not (zoom: 1) {
+  @media (min-width: 1025px) {
+    .dashboardContainer {
+      transform: scale(var(--dashboard-scale));
+      transform-origin: top center;
+      width: calc(100% / var(--dashboard-scale));
+      margin: 0 auto;
+    }
+  }
 }
 
 .mainContent {

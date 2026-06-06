@@ -12,6 +12,7 @@ import {
   Phone,
   Shield,
   Key,
+  Trash2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useUsers } from '@/context/UsersContext';
@@ -24,7 +25,7 @@ type FilterTab = 'all' | 'pending' | 'active';
 export default function AdminPage() {
   const router = useRouter();
   const { user, isLoggedIn, isLoading } = useAuth();
-  const { users, activateUser, adminDepositToUser, deleteAccount, adminProvideDepositInfo } = useUsers();
+  const { users, activateUser, adminDepositToUser, deleteAccount, adminProvideDepositInfo, deleteProofOfPayment } = useUsers();
 
   const [filter, setFilter] = useState<FilterTab>('all');
   const [depositAmounts, setDepositAmounts] = useState<Record<string, string>>({});
@@ -82,6 +83,12 @@ export default function AdminPage() {
     if (!isNaN(amount) && amount > 0) {
       adminDepositToUser(id, amount);
       setDepositAmounts((prev) => ({ ...prev, [id]: '' }));
+    }
+  };
+
+  const handleDeleteProof = (id: string) => {
+    if (confirm('Delete this proof of payment?')) {
+      deleteProofOfPayment(id);
     }
   };
 
@@ -270,6 +277,16 @@ export default function AdminPage() {
                             <Plus size={16} />
                           </button>
                         </div>
+                        {u.proofUrl && (
+                          <button
+                            type="button"
+                            className={styles.deleteProofBtn}
+                            onClick={() => handleDeleteProof(u.id)}
+                          >
+                            <Trash2 size={14} />
+                            Delete Proof
+                          </button>
+                        )}
                         <button
                           type="button"
                           className={styles.deleteBtn}
@@ -387,6 +404,16 @@ export default function AdminPage() {
                                   <Plus size={14} />
                                 </button>
                               </div>
+                              {u.proofUrl && (
+                                <button
+                                  type="button"
+                                  className={styles.deleteProofBtn}
+                                  onClick={() => handleDeleteProof(u.id)}
+                                >
+                                  <Trash2 size={14} />
+                                  Delete Proof
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 className={styles.deleteBtn}

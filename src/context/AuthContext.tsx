@@ -54,35 +54,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCashBalance(0);
   };
 
-  const depositFunds = (amount: number) => {
+  const normalizeBalance = (value: number) => Number(value.toFixed(2));
+
+  const syncBalance = (nextBalance: number) => {
     if (!currentUser) return;
-    const newBal = currentUser.balance + amount;
-    updateBalance(currentUser.id, newBal);
-    setCashBalance(newBal);
+    const normalized = Math.max(0, normalizeBalance(nextBalance));
+    updateBalance(currentUser.id, normalized);
+    setCashBalance(normalized);
+  };
+
+  const depositFunds = (amount: number) => {
+    if (!currentUser || amount <= 0) return;
+    syncBalance(cashBalance + amount);
   };
 
   const withdrawFunds = (amount: number) => {
     if (amount <= 0) return { success: false, error: 'Amount must be greater than zero.' };
     if (!currentUser) return { success: false, error: 'No user logged in.' };
-    if (currentUser.balance < amount) return { success: false, error: 'Insufficient cash balance.' };
-    const newBal = currentUser.balance - amount;
-    updateBalance(currentUser.id, newBal);
-    setCashBalance(newBal);
+    if (cashBalance < amount) return { success: false, error: 'Insufficient cash balance.' };
+    syncBalance(cashBalance - amount);
     return { success: true };
   };
 
   const deductCash = (amount: number) => {
-    if (!currentUser) return;
-    const newBal = currentUser.balance - amount;
-    updateBalance(currentUser.id, newBal);
-    setCashBalance(newBal);
+    if (!currentUser || amount <= 0) return;
+    syncBalance(cashBalance - amount);
   };
 
   const addCash = (amount: number) => {
-    if (!currentUser) return;
-    const newBal = currentUser.balance + amount;
-    updateBalance(currentUser.id, newBal);
-    setCashBalance(newBal);
+    if (!currentUser || amount <= 0) return;
+    syncBalance(cashBalance + amount);
   };
 
   return (

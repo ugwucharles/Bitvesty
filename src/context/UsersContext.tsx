@@ -52,6 +52,7 @@ interface UsersContextType {
   adminProvideDepositInfo: (userId: string, info: string) => void;
   uploadProof: (userId: string, file: File) => void;
   uploadIdDocument: (userId: string, file: File) => void;
+  deleteProofOfPayment: (userId: string) => void;
 }
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
@@ -241,6 +242,18 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const updated = usersRef.current.map((u) => (u.id === userId ? { ...u, idDocumentUrl: dataUrl } : u));
       void persist(updated);
     };
+  };
+
+  const deleteProofOfPayment = (userId: string) => {
+    const updated = usersRef.current.map((u) => {
+      if (u.id !== userId) return u;
+      return {
+        ...u,
+        proofUrl: undefined,
+        pendingDeposits: u.pendingDeposits?.map((dep) => ({ ...dep, proofUrl: undefined })),
+      };
+    });
+    void persist(updated);
   };
 
   const registerUser = ({ id, username, email, phone, password, idType, idFields, idDocumentUrl }: {
@@ -437,6 +450,7 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         adminProvideDepositInfo,
         uploadProof,
         uploadIdDocument,
+        deleteProofOfPayment,
       }}
     >
       {children}
