@@ -7,7 +7,7 @@ interface AuthContextType {
   user: UserSession | null;
   isLoggedIn: boolean;
   cashBalance: number;
-  login: (username: string, password: string) => { success: boolean; error?: string; user?: { username: string; role: string; active: boolean; balance: number } };
+  login: (username: string, password: string) => { success: boolean; error?: string; user?: { username: string; role: 'user' | 'admin'; active: boolean; balance: number } };
   logout: () => void;
   registerUser: (data: { id: string; username: string; email: string; phone: string; password: string }) => { success: boolean; error?: string };
   depositFunds: (amount: number) => void;
