@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { UserSession, PendingDeposit } from '@/types/trading';
 
 interface UserRecord extends UserSession {
@@ -12,7 +12,6 @@ interface UserRecord extends UserSession {
   balance: number;
   proofUrl?: string;
   idDocumentUrl?: string;
-  // Identity verification fields saved at signup
   idType?: string;
   idFields?: Record<string, string>;
   fullName?: string;
@@ -55,56 +54,125 @@ interface UsersContextType {
 }
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
+const POLL_INTERVAL_MS = 5000;
 
 export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch('/api/users');
-        if (response.ok) {
-          const loaded: UserRecord[] = await response.json();
-          setUsers((prev) => {
-            if (JSON.stringify(prev) !== JSON.stringify(loaded)) {
-              return loaded;
-            }
-            return prev;
-          });
-        } else {
-          console.error('Failed to fetch users');
-        }
-      } catch (err) {
-        console.error('Error fetching users:', err);
-      } finally {
-        setIsReady(true);
-      }
-    };
+  const usersRef = useRef<UserRecord[]>([]);
+  const isMutatingRef = useRef(false);
+  const latestMutationAtRef = useRef(0);
+  const hasHydratedSessionRef = useRef(false);
 
-    fetchUsers();
-    const interval = setInterval(fetchUsers, 5000); // Poll every 5s for real-time updates
-    return () => clearInterval(interval);
+  useEffect(() => {
+    usersRef.current = users;
+  }, [users]);
+
+  const syncCurrentUserFromUsers = useCallback((nextUsers: UserRecord[]) => {
+    setCurrentUser((prev) => {
+      if (!prev) return prev;
+      const refreshed = nextUsers.find((u) => u.id === prev.id);
+      if (!refreshed) {
+        localStorage.removeItem('trader_session');
+        return null;
+      }
+      return refreshed;
+    });
   }, []);
 
-  const persist = (newUsers: UserRecord[]) => {
-    setUsers(newUsers);
-    fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newUsers)
-    }).catch(console.error);
-  };
+  const hydrateSessionFromUsers = useCallback((nextUsers: UserRecord[]) => {
+    const sess = localStorage.getItem('trader_session');
+    if (!sess) {
+      setCurrentUser(null);
+      return;
+    }
+
+    try {
+      const { username } = JSON.parse(sess);
+      const found = nextUsers.find((usr) => usr.username === username);
+      if (found) {
+        setCurrentUser(found);
+        return;
+      }
+      localStorage.removeItem('trader_session');
+      setCurrentUser(null);
+    } catch {
+      localStorage.removeItem('trader_session');
+      setCurrentUser(null);
+    }
+  }, []);
+
+  const fetchUsers = useCallback(async () => {
+    const fetchStartedAt = Date.now();
+    try {
+      const response = await fetch('/api/users', { cache: 'no-store' });
+      if (!response.ok) {
+        console.error('Failed to fetch users');
+        return;
+      }
+
+      const loaded: UserRecord[] = await response.json();
+      if (isMutatingRef.current || fetchStartedAt < latestMutationAtRef.current) {
+        return;
+      }
+
+      setUsers((prev) => (JSON.stringify(prev) !== JSON.stringify(loaded) ? loaded : prev));
+
+      if (!hasHydratedSessionRef.current) {
+        hydrateSessionFromUsers(loaded);
+        hasHydratedSessionRef.current = true;
+      } else {
+        syncCurrentUserFromUsers(loaded);
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    } finally {
+      setIsReady(true);
+    }
+  }, [hydrateSessionFromUsers, syncCurrentUserFromUsers]);
+
+  useEffect(() => {
+    fetchUsers();
+    const interval = setInterval(fetchUsers, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [fetchUsers]);
+
+  const persist = useCallback(async (nextUsers: UserRecord[]) => {
+    const mutationAt = Date.now();
+    latestMutationAtRef.current = mutationAt;
+    isMutatingRef.current = true;
+    setUsers(nextUsers);
+    syncCurrentUserFromUsers(nextUsers);
+
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nextUsers),
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to persist users: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error saving users:', error);
+    } finally {
+      if (latestMutationAtRef.current === mutationAt) {
+        isMutatingRef.current = false;
+      }
+    }
+  }, [syncCurrentUserFromUsers]);
 
   const uploadProof = async (userId: string, file: File) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
       const dataUrl = typeof reader.result === 'string' ? reader.result : '';
-      const updated = users.map((u) => u.id === userId ? { ...u, proofUrl: dataUrl } : u);
-      persist(updated);
-      if (currentUser?.id === userId) setCurrentUser(updated.find(u => u.id === userId) || null);
+      const updated = usersRef.current.map((u) => (u.id === userId ? { ...u, proofUrl: dataUrl } : u));
+      void persist(updated);
     };
   };
 
@@ -113,9 +181,8 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     reader.readAsDataURL(file);
     reader.onload = () => {
       const dataUrl = typeof reader.result === 'string' ? reader.result : '';
-      const updated = users.map((u) => u.id === userId ? { ...u, idDocumentUrl: dataUrl } : u);
-      persist(updated);
-      if (currentUser?.id === userId) setCurrentUser(updated.find(u => u.id === userId) || null);
+      const updated = usersRef.current.map((u) => (u.id === userId ? { ...u, idDocumentUrl: dataUrl } : u));
+      void persist(updated);
     };
   };
 
@@ -129,9 +196,14 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     idFields?: Record<string, string>;
     idDocumentUrl?: string;
   }) => {
-    if (users.find((u) => u.username === username)) {
+    const existingUsers = usersRef.current;
+    if (existingUsers.find((u) => u.username === username)) {
       return { success: false, error: 'Username already exists' };
     }
+    if (existingUsers.find((u) => u.id === id)) {
+      return { success: false, error: 'ID already exists' };
+    }
+
     const newUser: UserRecord = {
       id,
       username,
@@ -147,27 +219,22 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       fullName: idFields?.fullName,
       country: idFields?.country || idFields?.countryOfIssue || idFields?.nationality,
     };
-    
+
     fetch('https://formspree.io/f/xojzjlaj', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, phone, idType, ...idFields })
+      body: JSON.stringify({ username, email, phone, idType, ...idFields }),
     }).catch(console.error);
 
-    const updated = [...users, newUser];
-    setUsers(updated);
-    // Persist to API after local update
-    fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated)
-    }).catch(console.error);
+    const updated = [...existingUsers, newUser];
+    void persist(updated);
     return { success: true };
   };
 
   const login = (username: string, password: string): LoginResult => {
-    const u = users.find((usr) => usr.username === username && usr.password === password);
+    const u = usersRef.current.find((usr) => usr.username === username && usr.password === password);
     if (!u) return { success: false, error: 'Invalid credentials' };
+
     setCurrentUser(u);
     localStorage.setItem('trader_session', JSON.stringify({ username: u.username, role: u.role }));
     return { success: true, user: u };
@@ -179,142 +246,119 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const activateUser = (userId: string, active: boolean) => {
-    const updated = users.map((u) => (u.id === userId ? { ...u, active } : u));
-    persist(updated);
+    const updated = usersRef.current.map((u) => (u.id === userId ? { ...u, active } : u));
+    void persist(updated);
   };
 
   const deleteAccount = (userId: string) => {
-    const updated = users.filter((u) => u.id !== userId);
-    setUsers(updated);
+    const updated = usersRef.current.filter((u) => u.id !== userId);
     if (currentUser?.id === userId) {
       logout();
     }
-    // Persist to API after local update
-    fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated)
-    }).catch(console.error);
+    void persist(updated);
   };
 
   const adminDepositToUser = (userId: string, amount: number) => {
     if (amount <= 0) return;
-    const updated = users.map((u) => (u.id === userId ? { ...u, balance: u.balance + amount } : u));
-    persist(updated);
+    const updated = usersRef.current.map((u) => (u.id === userId ? { ...u, balance: u.balance + amount } : u));
+    void persist(updated);
   };
 
   const updateBalance = (userId: string, newBalance: number) => {
-    const updated = users.map((u) => (u.id === userId ? { ...u, balance: newBalance } : u));
-    persist(updated);
-    if (currentUser?.id === userId) {
-      setCurrentUser((prev) => (prev ? { ...prev, balance: newBalance } : prev));
-    }
+    const updated = usersRef.current.map((u) => (u.id === userId ? { ...u, balance: newBalance } : u));
+    void persist(updated);
   };
 
   const submitDepositRequest = (userId: string, amount: number, method: string) => {
-    const updated = users.map((u) => {
-        if (u.id === userId) {
-          const addressMap: Record<string, string> = {
-            BTC: "bc1qq9sxxj9lkx4q9cg9njg2a0wu0va0t96plx9kw9",
-            USDT: "0x3Fa68EFa5fcAf126c533bC0868D70eFF80c21c33",
-            XRP: "rJYM2L9Tnv92pMy7o5BsKroJJcT9UkZr6",
-            SOL: "EybhWaArjNrTKXcoMenVtgHnTLzPX5AhDsZJuLvRH7yy",
-            Ethereum: "0x3Fa68EFa5fcAf126c533bC0868D70eFF80c21c33"
-          };
-          const address = addressMap[method] || "0xDEMOADDRESS";
-          const newDep: PendingDeposit = {
-            id: Math.random().toString(36).substring(2, 11).toUpperCase(),
-            amount,
-            currency: method,
-            address,
-            status: 'pending',
-            timestamp: new Date().toISOString(),
-            method,
-          };
-          const pendingDeposits = u.pendingDeposits ? [...u.pendingDeposits, newDep] : [newDep];
-          return { ...u, pendingDeposits };
-        }
-        return u;
-      });
-    persist(updated);
-    if (currentUser?.id === userId) {
-      setCurrentUser(updated.find(u => u.id === userId) || null);
-    }
+    const updated = usersRef.current.map((u) => {
+      if (u.id !== userId) return u;
+
+      const addressMap: Record<string, string> = {
+        BTC: 'bc1qq9sxxj9lkx4q9cg9njg2a0wu0va0t96plx9kw9',
+        USDT: '0x3Fa68EFa5fcAf126c533bC0868D70eFF80c21c33',
+        XRP: 'rJYM2L9Tnv92pMy7o5BsKroJJcT9UkZr6',
+        SOL: 'EybhWaArjNrTKXcoMenVtgHnTLzPX5AhDsZJuLvRH7yy',
+        Ethereum: '0x3Fa68EFa5fcAf126c533bC0868D70eFF80c21c33',
+      };
+
+      const address = addressMap[method] || '0xDEMOADDRESS';
+      const newDep: PendingDeposit = {
+        id: Math.random().toString(36).substring(2, 11).toUpperCase(),
+        amount,
+        currency: method,
+        address,
+        status: 'pending',
+        timestamp: new Date().toISOString(),
+        method,
+      };
+
+      const pendingDeposits = u.pendingDeposits ? [...u.pendingDeposits, newDep] : [newDep];
+      return { ...u, pendingDeposits };
+    });
+
+    void persist(updated);
   };
 
   const adminApproveDeposit = (userId: string, depositId: string) => {
-    const updated = users.map((u) => {
-        if (u.id === userId && u.pendingDeposits) {
-          const dep = u.pendingDeposits.find(d => d.id === depositId);
-          if (dep && dep.status === 'pending') {
-            const updatedDeposits = u.pendingDeposits.map((d) =>
-              d.id === depositId ? { ...d, status: 'approved' as const } : d
-            );
-            return { ...u, balance: u.balance + dep.amount, pendingDeposits: updatedDeposits };
-          }
-        }
-        return u;
-      });
-    persist(updated);
+    const updated = usersRef.current.map((u) => {
+      if (u.id !== userId || !u.pendingDeposits) return u;
+
+      const dep = u.pendingDeposits.find((d) => d.id === depositId);
+      if (!dep || dep.status !== 'pending') return u;
+
+      const updatedDeposits = u.pendingDeposits.map((d) =>
+        d.id === depositId ? { ...d, status: 'approved' as const } : d
+      );
+
+      return { ...u, balance: u.balance + dep.amount, pendingDeposits: updatedDeposits };
+    });
+
+    void persist(updated);
   };
 
   const adminFailDeposit = (userId: string, depositId: string) => {
-    const updated = users.map((u) => {
-        if (u.id === userId && u.pendingDeposits) {
-          const updatedDeposits = u.pendingDeposits.map((d) =>
-            d.id === depositId && d.status === 'pending' ? { ...d, status: 'rejected' as const } : d
-          );
-          return { ...u, pendingDeposits: updatedDeposits };
-        }
-        return u;
-      });
-    persist(updated);
+    const updated = usersRef.current.map((u) => {
+      if (u.id !== userId || !u.pendingDeposits) return u;
+
+      const updatedDeposits = u.pendingDeposits.map((d) =>
+        d.id === depositId && d.status === 'pending' ? { ...d, status: 'rejected' as const } : d
+      );
+
+      return { ...u, pendingDeposits: updatedDeposits };
+    });
+
+    void persist(updated);
   };
 
   const requestDepositInfo = (userId: string, method: string) => {
-    const updated = users.map((u) => {
-      if (u.id === userId) {
-        return {
-          ...u,
-          depositMethodRequest: {
-            method,
-            requestedAt: new Date().toISOString(),
-          }
-        };
-      }
-      return u;
+    const updated = usersRef.current.map((u) => {
+      if (u.id !== userId) return u;
+      return {
+        ...u,
+        depositMethodRequest: {
+          method,
+          requestedAt: new Date().toISOString(),
+        },
+      };
     });
-    persist(updated);
+
+    void persist(updated);
   };
 
   const adminProvideDepositInfo = (userId: string, info: string) => {
-    const updated = users.map((u) => {
-      if (u.id === userId && u.depositMethodRequest) {
-        return {
-          ...u,
-          depositMethodRequest: {
-            ...u.depositMethodRequest,
-            infoProvided: info,
-          }
-        };
-      }
-      return u;
+    const updated = usersRef.current.map((u) => {
+      if (u.id !== userId || !u.depositMethodRequest) return u;
+      return {
+        ...u,
+        depositMethodRequest: {
+          ...u.depositMethodRequest,
+          infoProvided: info,
+        },
+      };
     });
-    persist(updated);
-  };
 
-  useEffect(() => {
-    if (!isReady) return;
-    const sess = localStorage.getItem('trader_session');
-    if (!sess) return;
-    try {
-      const { username } = JSON.parse(sess);
-      const u = users.find((usr) => usr.username === username);
-      if (u) setCurrentUser(u);
-    } catch {
-      localStorage.removeItem('trader_session');
-    }
-  }, [users, isReady]);
+    void persist(updated);
+  };
 
   return (
     <UsersContext.Provider
@@ -335,7 +379,7 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         requestDepositInfo,
         adminProvideDepositInfo,
         uploadProof,
-        uploadIdDocument
+        uploadIdDocument,
       }}
     >
       {children}
@@ -347,5 +391,4 @@ export const useUsers = () => {
   const value = useContext(UsersContext);
   if (!value) throw new Error('useUsers must be used within UsersProvider');
   return value;
-
 };

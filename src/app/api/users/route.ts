@@ -4,6 +4,8 @@ import path from 'path';
 import { SeedUser, seedDefaultUsers } from '@/lib/defaultUsers';
 
 const dataFile = path.join(process.cwd(), 'data', 'users.json');
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function ensureDataFile(): Promise<SeedUser[]> {
   try {
@@ -29,7 +31,11 @@ async function ensureDataFile(): Promise<SeedUser[]> {
 export async function GET() {
   try {
     const users = await ensureDataFile();
-    return NextResponse.json(users);
+    return NextResponse.json(users, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      },
+    });
   } catch (error) {
     console.error("Error fetching users:", error);
     return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
@@ -49,7 +55,14 @@ export async function POST(request: Request) {
     }
 
     await fs.writeFile(dataFile, JSON.stringify(users, null, 2));
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: true },
+      {
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      }
+    );
   } catch (error) {
     console.error("Error saving users:", error);
     return NextResponse.json({ error: "Failed to save users" }, { status: 500 });

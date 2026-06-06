@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useUsers } from '@/context/UsersContext';
+import PageLoader from '@/components/PageLoader';
 import {
   TrendingUp,
   User,
@@ -273,7 +274,9 @@ export default function LoginPage() {
     setIsSubmitting(false);
   };
 
-  if (isLoading) return null;
+  if (isLoading || (isLoggedIn && user)) {
+    return <PageLoader message="Checking session..." />;
+  }
 
   return (
     <div className={styles.loginContainer}>
