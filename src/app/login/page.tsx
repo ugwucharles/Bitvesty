@@ -380,7 +380,7 @@ export default function LoginPage() {
   onChange={(e) => updateIdField(field.key, e.target.value)}
   required
   disabled={isSubmitting}
-  {...(field.key === 'licenseNumber' || field.key === 'passportNumber' || field.key === 'nationalIdNumber' || field.key === 'documentNumber' || field.key === 'phone' ? { inputMode: 'numeric', pattern: "\\d*" } : {})}
+  {...(field.key === 'licenseNumber' || field.key === 'passportNumber' || field.key === 'nationalIdNumber' || field.key === 'documentNumber' ? { inputMode: 'numeric', pattern: "\\d*" } : {})}
   {...(['fullName','state','country','nationality','countryOfIssue','documentName'].includes(field.key) ? { pattern: "[A-Za-z\\s]*" } : {})}
 />
                           )}
