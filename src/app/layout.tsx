@@ -5,6 +5,9 @@ import Providers from "@/components/Providers";
 export const metadata: Metadata = {
   title: "BitVesty - Smart Trading & Market Simulation",
   description: "BitVesty is a premium simulated trading platform with real-time charting, wallet funds management, and portfolio tracking.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
