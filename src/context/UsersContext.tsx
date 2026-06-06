@@ -179,10 +179,16 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const deleteAccount = (userId: string) => {
     const updated = users.filter((u) => u.id !== userId);
-    persist(updated);
+    setUsers(updated);
     if (currentUser?.id === userId) {
       logout();
     }
+    // Persist to API after local update
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated)
+    }).catch(console.error);
   };
 
   const adminDepositToUser = (userId: string, amount: number) => {
