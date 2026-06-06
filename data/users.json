@@ -1,0 +1,57 @@
+[
+  {
+    "id": "0",
+    "username": "admin",
+    "role": "admin",
+    "email": "admin@bitvesty.local",
+    "phone": "0000000000",
+    "password": "admin123",
+    "active": true,
+    "balance": 25000
+  },
+  {
+    "id": "1",
+    "username": "user",
+    "role": "user",
+    "email": "user@bitvesty.local",
+    "phone": "0000000001",
+    "password": "user123",
+    "active": true,
+    "balance": 10000
+  },
+  {
+    "id": "2",
+    "username": "tradboy",
+    "role": "user",
+    "email": "tradboy@gmail.com",
+    "phone": "2929983833",
+    "password": "password123",
+    "active": true,
+    "balance": 500
+  },
+  {
+    "id": "9390383930",
+    "username": "sandtrader",
+    "role": "user",
+    "email": "sandtrader@gmail.com",
+    "phone": "2928393029",
+    "password": "Password",
+    "active": true,
+    "balance": 0,
+    "depositMethodRequest": {
+      "method": "crypto",
+      "requestedAt": "2026-06-06T07:38:20.910Z"
+    },
+    "pendingDeposits": [
+      {
+        "id": "2KCKRS5FL",
+        "amount": 667888,
+        "currency": "Cash App",
+        "address": "0xDEMOADDRESS",
+        "status": "pending",
+        "timestamp": "2026-06-06T00:10:49.156Z",
+        "method": "Cash App"
+      }
+    ]
+  }
+]

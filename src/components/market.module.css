@@ -1,0 +1,127 @@
+.container {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-data);
+}
+
+.header {
+  margin-bottom: 12px;
+}
+
+.header h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.header p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tableWrapper table {
+  min-width: 420px;
+}
+
+.cellRight {
+  text-align: right;
+}
+
+.row {
+  cursor: pointer;
+  transition: background var(--duration-fast) ease;
+}
+
+.activeRow td {
+  background: var(--accent-muted);
+  border-bottom-color: rgba(240, 185, 11, 0.15) !important;
+}
+
+.activeRow td:first-child {
+  border-left: 2px solid var(--accent);
+}
+
+.assetCell {
+  display: flex;
+  flex-direction: column;
+}
+
+.symbol {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+}
+
+.name {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.price {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  transition: background-color 0.1s ease;
+}
+
+.changeCell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.positiveText {
+  color: var(--buy);
+}
+
+.negativeText {
+  color: var(--sell);
+}
+
+.viewBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+
+.viewBtnActive {
+  background: var(--accent-muted);
+  border-color: rgba(240, 185, 11, 0.25);
+  color: var(--accent);
+}
+
+.row:hover .viewBtn:not(.viewBtnActive) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
+  }
+
+  .viewBtn span {
+    display: none;
+  }
+}

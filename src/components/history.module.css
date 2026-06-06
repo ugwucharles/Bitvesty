@@ -1,0 +1,98 @@
+.container {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-data);
+}
+
+.header {
+  margin-bottom: 12px;
+}
+
+.header h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.header p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ledgerWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ledgerWrapper table {
+  min-width: 480px;
+}
+
+.cellRight {
+  text-align: right;
+}
+
+.scrollArea {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 28px 16px;
+  gap: 6px;
+}
+
+.emptyState p {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.emptyState span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.symbol {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+}
+
+.value,
+.totalVal {
+  font-variant-numeric: tabular-nums;
+}
+
+.totalVal {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.time {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 560px) {
+  .container {
+    padding: 12px;
+  }
+
+  .ledgerWrapper th:nth-child(3),
+  .ledgerWrapper td:nth-child(3),
+  .ledgerWrapper th:nth-child(4),
+  .ledgerWrapper td:nth-child(4) {
+    display: none;
+  }
+}

@@ -1,0 +1,198 @@
+.container {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-data);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.assetMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.assetSymbol {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pricing {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.currentPrice {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.change {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.positive {
+  color: var(--buy);
+}
+
+.negative {
+  color: var(--sell);
+}
+
+.controls {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  padding: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.tfBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+
+.tfBtn:hover {
+  color: var(--text-primary);
+}
+
+.tfBtnActive {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.chartWrapper {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  margin-bottom: 6px;
+}
+
+.svgElement {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.gridline {
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-dasharray: 4 4;
+}
+
+.crosshair {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-dasharray: 3 3;
+  stroke-width: 1px;
+}
+
+.tooltip {
+  position: absolute;
+  transform: translate(-50%, -115%);
+  padding: 6px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 10;
+  pointer-events: none;
+  min-width: 100px;
+}
+
+.tooltip strong {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip span {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-top: auto;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .chartWrapper {
+    height: 200px;
+  }
+}
+
+@media (max-width: 640px) {
+  .controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .tfBtn {
+    flex: 1;
+    padding: 6px 4px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
+  }
+
+  .header {
+    gap: 10px;
+  }
+
+  .currentPrice {
+    font-size: clamp(1.125rem, 5vw, 1.25rem);
+  }
+
+  .chartWrapper {
+    height: clamp(160px, 42vw, 200px);
+  }
+
+  .tooltip {
+    min-width: 88px;
+    padding: 5px 8px;
+  }
+}

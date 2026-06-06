@@ -1,0 +1,154 @@
+.container {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-data);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.titleMeta h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.titleMeta p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tableWrapper table {
+  min-width: 560px;
+}
+
+.cellRight {
+  text-align: right;
+}
+
+.emptyState {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 16px;
+  gap: 6px;
+}
+
+.emptyState p {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.emptyState span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.assetCell {
+  display: flex;
+  flex-direction: column;
+}
+
+.symbol {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+}
+
+.name {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+.quantity,
+.price,
+.marketVal {
+  font-variant-numeric: tabular-nums;
+}
+
+.marketVal {
+  font-weight: 500;
+}
+
+.pnlCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pnlValues {
+  display: flex;
+  flex-direction: column;
+}
+
+.pnlValues strong {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pnlValues span {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.positiveText {
+  color: var(--buy);
+}
+
+.negativeText {
+  color: var(--sell);
+}
+
+.liquidateBtn {
+  background: var(--sell-bg) !important;
+  border: 1px solid rgba(246, 70, 93, 0.25) !important;
+  color: var(--sell) !important;
+  padding: 4px 10px !important;
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  border-radius: var(--radius-xs) !important;
+  transition: all var(--duration-fast) ease !important;
+}
+
+.liquidateBtn:hover {
+  background: var(--sell) !important;
+  color: white !important;
+}
+
+@media (max-width: 560px) {
+  .container {
+    padding: 12px;
+  }
+
+  .tableWrapper th:nth-child(3),
+  .tableWrapper td:nth-child(3),
+  .tableWrapper th:nth-child(4),
+  .tableWrapper td:nth-child(4),
+  .tableWrapper th:nth-child(5),
+  .tableWrapper td:nth-child(5) {
+    display: none;
+  }
+}

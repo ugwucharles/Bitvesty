@@ -1,0 +1,631 @@
+.adminPage {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.loadingScreen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.main {
+  flex: 1;
+  padding: 24px 0 40px;
+}
+
+.pageInner {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 var(--page-gutter);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.pageIntro h1 {
+  font-size: 1.75rem;
+  margin-bottom: 6px;
+}
+
+.pageIntro p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.statsRail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  --scroll-item-width: min(78vw, 260px);
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  min-height: 88px;
+}
+
+.statCard {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.statIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-xs);
+  background: var(--accent-muted);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.statIconPending {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+}
+
+.statIconActive {
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+}
+
+.statIconBalance {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fcd34d;
+}
+
+.statLabel {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.statCard strong {
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.usersSection {
+  padding: 18px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.sectionHeader h2 {
+  font-size: 1.15rem;
+  margin-bottom: 4px;
+}
+
+.sectionHeader p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.filterTabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+}
+
+.filterTab {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterTab:hover {
+  color: var(--text-primary);
+}
+
+.filterTabActive {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 20px;
+  color: var(--text-muted);
+}
+
+.cardsRail {
+  display: none;
+  --scroll-item-width: min(88vw, 340px);
+}
+
+.userCard {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.userCardTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userCard {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.userAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #0B0E11;
+  flex-shrink: 0;
+}
+
+.userMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.userMeta strong {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.userMeta span {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.detailRow svg {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.userActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activateBtn,
+.deactivateBtn {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.activateBtn {
+  background: var(--buy);
+  color: #0B0E11;
+}
+
+.deactivateBtn {
+  background: var(--sell-bg);
+  border: 1px solid rgba(246, 70, 93, 0.25);
+  color: var(--sell);
+}
+
+.deleteBtn {
+  background: var(--sell);
+  color: white;
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: 10px 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+
+.depositRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.depositInput {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px !important;
+  font-size: 0.85rem !important;
+}
+
+.depositBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: var(--accent);
+  color: #0B0E11;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.userTable {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.userTable th {
+  padding: 12px 14px;
+  font-size: 0.75rem;
+}
+
+.userTable td {
+  padding: 14px;
+  vertical-align: middle;
+}
+
+.tableUser {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tableUser strong {
+  display: block;
+  font-size: 0.9rem;
+}
+
+.tableUser span {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.tableContact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.tableActions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 180px;
+}
+
+.tableActions .activateBtn,
+.tableActions .deactivateBtn {
+  width: auto;
+}
+
+.adminNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.adminNote svg {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.proofImg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-xs);
+  margin-top: 4px;
+}
+
+.detailBlock {
+  margin-top: 10px;
+}
+
+.detailList {
+  margin-left: 14px;
+}
+
+.depositListItem {
+  margin-bottom: 5px;
+}
+
+.infoFormBox {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--accent-muted);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(240, 185, 11, 0.25);
+}
+
+.infoFormTitle {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  color: var(--accent);
+}
+
+.infoFormFields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.infoFormRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.infoFormLabel {
+  font-size: 0.75rem;
+  min-width: 90px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.infoFormInput {
+  flex: 1;
+  min-width: 120px;
+  padding: 6px 8px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+}
+
+.infoFormSubmit {
+  margin-top: 4px;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  background: var(--accent);
+  color: #0B0E11;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  width: 100%;
+}
+
+.tableInfoForm {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tableInfoRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tableInfoLabel {
+  font-size: 0.6875rem;
+  width: 72px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tableInfoInput {
+  flex: 1;
+  min-width: 80px;
+  padding: 4px 6px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.75rem;
+}
+
+.tableInfoSubmit {
+  padding: 6px 10px;
+  border-radius: var(--radius-xs);
+  background: var(--accent);
+  color: #0B0E11;
+  border: none;
+  cursor: pointer;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  width: 100%;
+}
+
+.inlineKey {
+  display: inline;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+@media (max-width: 900px) {
+  .statsRail {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    margin-left: calc(-1 * var(--page-gutter));
+    margin-right: calc(-1 * var(--page-gutter));
+    padding-left: var(--page-gutter);
+    padding-right: var(--page-gutter);
+  }
+
+  .statCard {
+    flex: 0 0 min(78vw, 260px);
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding: 16px 0 32px;
+  }
+
+  .pageInner {
+    gap: 18px;
+  }
+
+  .pageIntro h1 {
+    font-size: 1.45rem;
+  }
+
+  .usersSection {
+    padding: 18px 16px;
+  }
+
+  .cardsRail {
+    display: flex;
+  }
+
+  .tableWrap {
+    display: none;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+  }
+
+  .filterTabs {
+    width: 100%;
+  }
+
+  .filterTab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pageIntro h1 {
+    font-size: 1.25rem;
+  }
+
+  .pageIntro p {
+    font-size: 0.8125rem;
+  }
+
+  .statCard {
+    padding: 14px 16px;
+    min-height: 76px;
+  }
+
+  .statCard strong {
+    font-size: 1.1rem;
+  }
+
+  .userCard {
+    padding: 14px;
+  }
+
+  .infoFormRow,
+  .tableInfoRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .infoFormLabel,
+  .tableInfoLabel {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .depositRow {
+    flex-wrap: wrap;
+  }
+
+  .depositInput {
+    width: 100%;
+  }
+}
