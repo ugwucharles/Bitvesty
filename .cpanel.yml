@@ -1,0 +1,6 @@
+---
+deployment:
+  tasks:
+    - export NODE_VERSION=18
+    - npm install
+    - npm run build
