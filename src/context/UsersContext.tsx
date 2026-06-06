@@ -155,7 +155,13 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }).catch(console.error);
 
     const updated = [...users, newUser];
-    persist(updated);
+    setUsers(updated);
+    // Persist to API after local update
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated)
+    }).catch(console.error);
     return { success: true };
   };
 
