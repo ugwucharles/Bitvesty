@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { UserSession } from '@/types/trading';
+import { UserSession, PendingDeposit } from '@/types/trading';
 
 interface UserRecord extends UserSession {
   id: string;
@@ -210,14 +210,14 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             Ethereum: "0x3Fa68EFa5fcAf126c533bC0868D70eFF80c21c33"
           };
           const address = addressMap[method] || "0xDEMOADDRESS";
-          const newDep = {
+          const newDep: PendingDeposit = {
             id: Math.random().toString(36).substring(2, 11).toUpperCase(),
             amount,
             currency: method,
-            address: address, 
+            address,
             status: 'pending',
             timestamp: new Date().toISOString(),
-            method
+            method,
           };
           const pendingDeposits = u.pendingDeposits ? [...u.pendingDeposits, newDep] : [newDep];
           return { ...u, pendingDeposits };
@@ -235,8 +235,8 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (u.id === userId && u.pendingDeposits) {
           const dep = u.pendingDeposits.find(d => d.id === depositId);
           if (dep && dep.status === 'pending') {
-            const updatedDeposits = u.pendingDeposits.map(d => 
-              d.id === depositId ? { ...d, status: 'approved' } : d
+            const updatedDeposits = u.pendingDeposits.map((d) =>
+              d.id === depositId ? { ...d, status: 'approved' as const } : d
             );
             return { ...u, balance: u.balance + dep.amount, pendingDeposits: updatedDeposits };
           }
@@ -249,8 +249,8 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const adminFailDeposit = (userId: string, depositId: string) => {
     const updated = users.map((u) => {
         if (u.id === userId && u.pendingDeposits) {
-          const updatedDeposits = u.pendingDeposits.map(d => 
-            d.id === depositId && d.status === 'pending' ? { ...d, status: 'rejected' } : d
+          const updatedDeposits = u.pendingDeposits.map((d) =>
+            d.id === depositId && d.status === 'pending' ? { ...d, status: 'rejected' as const } : d
           );
           return { ...u, pendingDeposits: updatedDeposits };
         }
