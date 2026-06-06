@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { UserSession, PendingDeposit } from '@/types/trading';
+import { SeedUser, seedDefaultUsers } from '@/lib/defaultUsers';
 
 interface UserRecord extends UserSession {
   id: string;
@@ -54,7 +55,8 @@ interface UsersContextType {
 }
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
-const POLL_INTERVAL_MS = 5000;
+const USERS_STORAGE_KEY = 'bitvesty_users';
+const SESSION_STORAGE_KEY = 'trader_session';
 
 export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<UserRecord[]>([]);
@@ -62,9 +64,6 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isReady, setIsReady] = useState(false);
 
   const usersRef = useRef<UserRecord[]>([]);
-  const isMutatingRef = useRef(false);
-  const latestMutationAtRef = useRef(0);
-  const hasHydratedSessionRef = useRef(false);
 
   useEffect(() => {
     usersRef.current = users;
@@ -75,15 +74,35 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!prev) return prev;
       const refreshed = nextUsers.find((u) => u.id === prev.id);
       if (!refreshed) {
-        localStorage.removeItem('trader_session');
+        localStorage.removeItem(SESSION_STORAGE_KEY);
         return null;
       }
       return refreshed;
     });
   }, []);
 
+  const normalizeUsers = useCallback((loadedUsers: UserRecord[]): UserRecord[] => {
+    return seedDefaultUsers(loadedUsers as SeedUser[]) as UserRecord[];
+  }, []);
+
+  const readUsersFromStorage = useCallback((): UserRecord[] | null => {
+    try {
+      const stored = localStorage.getItem(USERS_STORAGE_KEY);
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return null;
+      return normalizeUsers(parsed as UserRecord[]);
+    } catch {
+      return null;
+    }
+  }, [normalizeUsers]);
+
+  const writeUsersToStorage = useCallback((nextUsers: UserRecord[]) => {
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(nextUsers));
+  }, []);
+
   const hydrateSessionFromUsers = useCallback((nextUsers: UserRecord[]) => {
-    const sess = localStorage.getItem('trader_session');
+    const sess = localStorage.getItem(SESSION_STORAGE_KEY);
     if (!sess) {
       setCurrentUser(null);
       return;
@@ -96,61 +115,103 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setCurrentUser(found);
         return;
       }
-      localStorage.removeItem('trader_session');
+      localStorage.removeItem(SESSION_STORAGE_KEY);
       setCurrentUser(null);
     } catch {
-      localStorage.removeItem('trader_session');
+      localStorage.removeItem(SESSION_STORAGE_KEY);
       setCurrentUser(null);
     }
   }, []);
-
-  const fetchUsers = useCallback(async () => {
-    const fetchStartedAt = Date.now();
-    try {
-      const response = await fetch('/api/users', { cache: 'no-store' });
-      if (!response.ok) {
-        console.error('Failed to fetch users');
-        return;
-      }
-
-      const loaded: UserRecord[] = await response.json();
-      if (isMutatingRef.current || fetchStartedAt < latestMutationAtRef.current) {
-        return;
-      }
-
-      setUsers((prev) => (JSON.stringify(prev) !== JSON.stringify(loaded) ? loaded : prev));
-
-      if (!hasHydratedSessionRef.current) {
-        hydrateSessionFromUsers(loaded);
-        hasHydratedSessionRef.current = true;
-      } else {
-        syncCurrentUserFromUsers(loaded);
-      }
-    } catch (err) {
-      console.error('Error fetching users:', err);
-    } finally {
-      setIsReady(true);
+  const applyUsersState = useCallback((nextUsers: UserRecord[], hydrateSession: boolean) => {
+    usersRef.current = nextUsers;
+    setUsers(nextUsers);
+    if (hydrateSession) {
+      hydrateSessionFromUsers(nextUsers);
+    } else {
+      syncCurrentUserFromUsers(nextUsers);
     }
   }, [hydrateSessionFromUsers, syncCurrentUserFromUsers]);
 
   useEffect(() => {
-    fetchUsers();
-    const interval = setInterval(fetchUsers, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [fetchUsers]);
+    let cancelled = false;
+
+    const bootstrapUsers = async () => {
+      const storedUsers = readUsersFromStorage();
+      if (storedUsers) {
+        if (cancelled) return;
+        applyUsersState(storedUsers, true);
+        setIsReady(true);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/users', { cache: 'no-store' });
+        if (response.ok) {
+          const loaded = normalizeUsers(await response.json() as UserRecord[]);
+          if (cancelled) return;
+          writeUsersToStorage(loaded);
+          applyUsersState(loaded, true);
+          setIsReady(true);
+          return;
+        }
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      }
+
+      if (cancelled) return;
+      const fallbackUsers = normalizeUsers([]);
+      writeUsersToStorage(fallbackUsers);
+      applyUsersState(fallbackUsers, true);
+      setIsReady(true);
+    };
+
+    void bootstrapUsers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [applyUsersState, normalizeUsers, readUsersFromStorage, writeUsersToStorage]);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === USERS_STORAGE_KEY) {
+        const nextUsers = readUsersFromStorage();
+        if (nextUsers) {
+          applyUsersState(nextUsers, false);
+        }
+      }
+
+      if (event.key === SESSION_STORAGE_KEY) {
+        if (!event.newValue) {
+          setCurrentUser(null);
+          return;
+        }
+        try {
+          const { username } = JSON.parse(event.newValue);
+          const found = usersRef.current.find((usr) => usr.username === username) || null;
+          setCurrentUser(found);
+        } catch {
+          setCurrentUser(null);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [applyUsersState, readUsersFromStorage]);
 
   const persist = useCallback(async (nextUsers: UserRecord[]) => {
-    const mutationAt = Date.now();
-    latestMutationAtRef.current = mutationAt;
-    isMutatingRef.current = true;
-    setUsers(nextUsers);
-    syncCurrentUserFromUsers(nextUsers);
+    const normalizedUsers = normalizeUsers(nextUsers);
+    usersRef.current = normalizedUsers;
+    setUsers(normalizedUsers);
+    syncCurrentUserFromUsers(normalizedUsers);
+    writeUsersToStorage(normalizedUsers);
 
     try {
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nextUsers),
+        body: JSON.stringify(normalizedUsers),
         cache: 'no-store',
       });
 
@@ -159,12 +220,8 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     } catch (error) {
       console.error('Error saving users:', error);
-    } finally {
-      if (latestMutationAtRef.current === mutationAt) {
-        isMutatingRef.current = false;
-      }
     }
-  }, [syncCurrentUserFromUsers]);
+  }, [normalizeUsers, syncCurrentUserFromUsers, writeUsersToStorage]);
 
   const uploadProof = async (userId: string, file: File) => {
     const reader = new FileReader();
@@ -236,13 +293,13 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!u) return { success: false, error: 'Invalid credentials' };
 
     setCurrentUser(u);
-    localStorage.setItem('trader_session', JSON.stringify({ username: u.username, role: u.role }));
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ username: u.username, role: u.role }));
     return { success: true, user: u };
   };
 
   const logout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('trader_session');
+    localStorage.removeItem(SESSION_STORAGE_KEY);
   };
 
   const activateUser = (userId: string, active: boolean) => {

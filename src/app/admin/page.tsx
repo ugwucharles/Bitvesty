@@ -52,10 +52,6 @@ export default function AdminPage() {
     }
   }, [isLoading, isLoggedIn, user, router]);
 
-  if (isLoading) {
-    return <PageLoader message="Loading admin panel..." />;
-  }
-
   const stats = useMemo(() => {
     const regularUsers = users.filter((u) => u.role === 'user');
     return {
