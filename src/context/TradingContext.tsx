@@ -10,6 +10,7 @@ interface TradingContextType {
   activeAsset: Asset;
   holdings: Holding[];
   transactions: Transaction[];
+  setActiveAssetId: (id: string) => void;
   setHoldings: (holdings: Holding[]) => void;
   buyAsset: (assetId: string, quantity: number) => { success: boolean; error?: string };
   sellAsset: (assetId: string, quantity: number) => { success: boolean; error?: string };
