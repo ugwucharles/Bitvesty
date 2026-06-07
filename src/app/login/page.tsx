@@ -47,7 +47,7 @@ interface IdFieldConfig {
   label: string;
   placeholder: string;
   type?: 'text' | 'date';
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<any>;
 }
 
 const ID_TYPE_CONFIG: Record<
