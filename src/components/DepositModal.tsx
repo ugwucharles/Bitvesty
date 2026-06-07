@@ -30,7 +30,7 @@ interface FundingConfig {
   id: FundingMethod;
   label: string;
   hint: string;
-  icon: React.ComponentType<{ size?: number }>;
+  icon: React.ComponentType<any>;
   instructions: string;
   fields: DetailField[];
 }
