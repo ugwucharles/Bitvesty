@@ -6,7 +6,13 @@ export const metadata: Metadata = {
   title: "BitVesty - Smart Trading & Market Simulation",
   description: "BitVesty is a premium simulated trading platform with real-time charting, wallet funds management, and portfolio tracking.",
   icons: {
-    icon: "/favicon.svg",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
